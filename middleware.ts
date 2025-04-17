@@ -7,7 +7,7 @@ export async function middleware(request: NextRequest) {
     /* Implement a redirecting middleware YOUR CODE HERE */
     const pathname = request.nextUrl.pathname;
     const session = await auth.api.getSession({
-        headers: await headers(),
+        headers: request.headers,
     });
 
   // Redirect if not logged in and accessing /todos
