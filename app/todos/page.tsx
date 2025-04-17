@@ -1,34 +1,25 @@
 import { TodoList } from "@/components/TodoList"
 import { todos as todosTable, Todo } from "@/database/schema"
 
+//import auth + db utils
+import { auth } from "@/lib/auth";
+import { db } from "@/database/db";
+import { eq } from "drizzle-orm";
+import { headers } from "next/headers"; //  to extract session from cookies
+
 export default async function TodosPage() {
-    const todos: Todo[] = [
-        {
-            id: "qwerty",
-            title: "Read React docs",
-            completed: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            userId: "xyz"
-        },
-        {
-            id: "uiop[]",
-            title: "Read Next.js docs",
-            completed: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            userId: "xyz"
-        },
-        {
-            id: "abcdefg",
-            title: "Finish CS 5356 homework",
-            completed: false,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            userId: "xyz"
-        }
-        
-    ]
+    //  fetch session
+    const session = await auth.api.getSession({ headers: await headers() });
+    // if not logged in, render nothing or fallback UI
+    if (!session?.user) {
+        return null; // or return <p>Please log in to view your todos.</p>
+    }
+    
+    // fetch todos that belong to the current user from the DB
+    const todos = await db.query.todos.findMany({
+        where: eq(todosTable.userId, session.user.id),
+        orderBy: (todos, { desc }) => [desc(todos.createdAt)],
+    });
 
     return (
         <main className="py-8 px-4">
